@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Bank - Admin Dashboard</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#f4f6f9;
+        }
+
+        .header{
+            background:#003366;
+            color:white;
+            padding:20px;
+            text-align:center;
+        }
+
+        .container{
+            width:90%;
+            margin:30px auto;
+            display:flex;
+            gap:20px;
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+
+        .card{
+            width:350px;
+            background:white;
+            padding:25px;
+            border-radius:10px;
+            box-shadow:0px 0px 10px rgba(0,0,0,0.2);
+        }
+
+        h2{
+            color:#003366;
+            text-align:center;
+            margin-bottom:20px;
+        }
+
+        input{
+            width:100%;
+            padding:10px;
+            margin:10px 0;
+            border:1px solid #ccc;
+            border-radius:5px;
+        }
+
+        button{
+            width:100%;
+            padding:10px;
+            background:#003366;
+            color:white;
+            border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#0055aa;
+        }
+
+        #message{
+            text-align:center;
+            color:green;
+            margin-top:20px;
+            font-weight:bold;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🏦 CODE BANK ADMIN DASHBOARD</h1>
+</div>
+
+<div class="container">
+
+    <!-- ADD CUSTOMER -->
+
+    <div class="card">
+
+        <h2>Add Customer</h2>
+
+        <input type="text" id="name" placeholder="Customer Name">
+
+        <input type="number" id="acc_num" placeholder="Account Number">
+
+        <input type="password" id="pin" placeholder="PIN">
+
+        <input type="number" id="balance" placeholder="Balance">
+
+        <button onclick="addCustomer()">
+            Add Customer
+        </button>
+
+    </div>
+
+
+    <!-- UPDATE CUSTOMER -->
+
+    <div class="card">
+
+        <h2>Update Customer</h2>
+
+        <input type="number" id="update_acc" placeholder="Account Number">
+
+        <input type="text" id="update_name" placeholder="New Name">
+
+        <button onclick="updateCustomer()">
+            Update Customer
+        </button>
+
+    </div>
+
+
+    <!-- DELETE CUSTOMER -->
+
+    <div class="card">
+
+        <h2>Delete Customer</h2>
+
+        <input type="number" id="delete_acc" placeholder="Account Number">
+
+        <button onclick="deleteCustomer()">
+            Delete Customer
+        </button>
+
+    </div>
+
+</div>
+
+<p id="message"></p>
+
+<script>
+
+function addCustomer(){
+
+    let name =
+        document.getElementById("name").value;
+
+    let acc_num =
+        document.getElementById("acc_num").value;
+
+    let pin =
+        document.getElementById("pin").value;
+
+    let balance =
+        document.getElementById("balance").value;
+
+    fetch(
+        `http://localhost:8080/addCustomer?name=${name}&acc_num=${acc_num}&pin=${pin}&balance=${balance}`,
+        {
+            method:"POST"
+        }
+    )
+
+    .then(response => response.text())
+
+    .then(data => {
+        document.getElementById("message").innerHTML = data;
+    });
+
+}
+
+
+
+function updateCustomer(){
+
+    let acc_num =
+        document.getElementById("update_acc").value;
+
+    let name =
+        document.getElementById("update_name").value;
+
+    fetch(
+        `http://localhost:8080/updateCustomer?acc_num=${acc_num}&name=${name}`,
+        {
+            method:"PUT"
+        }
+    )
+
+    .then(response => response.text())
+
+    .then(data => {
+        document.getElementById("message").innerHTML = data;
+    });
+
+}
+
+
+
+function deleteCustomer(){
+
+    let acc_num =
+        document.getElementById("delete_acc").value;
+
+    fetch(
+        `http://localhost:8080/deleteCustomer?acc_num=${acc_num}`,
+        {
+            method:"DELETE"
+        }
+    )
+
+    .then(response => response.text())
+
+    .then(data => {
+        document.getElementById("message").innerHTML = data;
+    });
+
+}
+
+</script>
+
+</body>
+</html>

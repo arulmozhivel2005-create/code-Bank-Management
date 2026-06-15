@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial; }
+
+body {
+    background:#e3f2fd;
+    padding:20px;
+}
+
+h1 { color:#0d47a1; text-align:center; margin-bottom:5px; }
+
+.welcome {
+    text-align:center;
+    color:green;
+    font-size:18px;
+    margin-bottom:20px;
+    font-weight:bold;
+}
+
+.cards {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.card {
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px gray;
+    width:400px;
+}
+
+.card h2 {
+    color:#0d47a1;
+    margin-bottom:15px;
+    border-bottom:2px solid #e3f2fd;
+    padding-bottom:10px;
+}
+
+input {
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-size:14px;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    background:#0d47a1;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:15px;
+    margin-top:5px;
+}
+
+button:hover { background:#1565c0; }
+
+.result {
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+    padding:8px;
+    border-radius:5px;
+}
+
+.success { color:green; background:#e8f5e9; }
+.error { color:red; background:#ffebee; }
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-size:13px;
+}
+
+th {
+    background:#0d47a1;
+    color:white;
+    padding:8px;
+    text-align:left;
+}
+
+td {
+    padding:8px;
+    border-bottom:1px solid #eee;
+}
+
+tr:hover { background:#f5f5f5; }
+
+.logout {
+    text-align:center;
+    margin-top:20px;
+}
+
+.logout button {
+    width:150px;
+    background:#c62828;
+}
+
+.logout button:hover { background:#e53935; }
+
+.sent { color:red; }
+.received { color:green; }
+</style>
+</head>
+<body>
+
+<h1>🏦 CODE BANK</h1>
+<p class="welcome" id="welcome"></p>
+
+<div class="cards">
+
+    <!-- TRANSFER CARD -->
+    <div class="card">
+        <h2>💸 Money Transfer</h2>
+        <input type="number" id="to_acc" placeholder="Receiver Account Number">
+        <input type="number" id="amount" placeholder="Amount">
+        <button onclick="transfer()">Transfer</button>
+        <p class="result" id="transferResult"></p>
+    </div>
+
+    <!-- TRANSACTION HISTORY CARD -->
+    <div class="card">
+        <h2>📋 Transaction History</h2>
+        <button onclick="loadTransactions()" 
+                style="background:#1b5e20; margin-bottom:10px;">
+            🔄 Refresh History
+        </button>
+        <div id="txnTable"></div>
+    </div>
+
+</div>
+
+<div class="logout">
+    <button onclick="logout()">🚪 Logout</button>
+</div>
+
+<script>
+
+// Load customer data from localStorage
+let customerData = localStorage.getItem("customerData");
+let acc_num = localStorage.getItem("acc_num");
+
+if(!customerData){
+    window.location.href = "customer.html";
+}
+
+document.getElementById("welcome").innerHTML = customerData;
+
+// TRANSFER FUNCTION
+function transfer(){
+    let to_acc = document.getElementById("to_acc").value;
+    let amount = document.getElementById("amount").value;
+    let resultEl = document.getElementById("transferResult");
+
+    if(!to_acc || !amount){
+        resultEl.className = "result error";
+        resultEl.innerHTML = "Please fill all fields";
+        return;
+    }
+
+    if(amount <= 0){
+        resultEl.className = "result error";
+        resultEl.innerHTML = "Amount must be greater than 0";
+        return;
+    }
+
+    fetch(`http://localhost:8080/transfer?from_acc=${acc_num}&to_acc=${to_acc}&amount=${amount}`,
+        { method:"POST" })
+    .then(res => res.text())
+    .then(data => {
+        if(data === "Transfer Successful"){
+            resultEl.className = "result success";
+            resultEl.innerHTML = "✅ " + data;
+            loadTransactions();
+        } else {
+            resultEl.className = "result error";
+            resultEl.innerHTML = "❌ " + data;
+        }
+    })
+    .catch(() => {
+        resultEl.className = "result error";
+        resultEl.innerHTML = "❌ Server Connection Error";
+    });
+}
+
+// LOAD TRANSACTION HISTORY
+function loadTransactions(){
+    fetch(`http://localhost:8080/transactions?acc_num=${acc_num}`)
+    .then(res => res.text())
+    .then(data => {
+        let container = document.getElementById("txnTable");
+
+        if(data === "No Transactions"){
+            container.innerHTML = "<p style='text-align:center;color:gray;margin-top:10px'>No transactions yet</p>";
+            return;
+        }
+
+        let rows = data.split(";").filter(r => r.trim() !== "");
+        let html = `<table>
+            <tr>
+                <th>#</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Amount</th>
+                <th>Date</th>
+            </tr>`;
+
+        rows.forEach(row => {
+            let cols = row.split(",");
+            let id = cols[0];
+            let from = cols[1];
+            let to = cols[2];
+            let amt = cols[3];
+            let date = cols[4];
+            let type = (from == acc_num) ? "sent" : "received";
+            let sign = (type === "sent") ? "-" : "+";
+
+            html += `<tr>
+                <td>${id}</td>
+                <td>${from}</td>
+                <td>${to}</td>
+                <td class="${type}">${sign}₹${amt}</td>
+                <td>${date.substring(0,16)}</td>
+            </tr>`;
+        });
+
+        html += "</table>";
+        container.innerHTML = html;
+    })
+    .catch(() => {
+        document.getElementById("txnTable").innerHTML =
+            "<p style='color:red'>Error loading transactions</p>";
+    });
+}
+
+// LOGOUT
+function logout(){
+    localStorage.clear();
+    window.location.href = "customer.html";
+}
+
+// Auto load transactions on page open
+loadTransactions();
+
+</script>
+</body>
+</html>
