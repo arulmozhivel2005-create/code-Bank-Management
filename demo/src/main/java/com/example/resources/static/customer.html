@@ -125,10 +125,8 @@ function login(){
     })
 
     .catch(error => {
-
-        document.getElementById("result")
-                .innerHTML =
-                "Server Connection Error";
+    document.getElementById("result").innerHTML =
+        "ERROR: " + error;
 
     });
 
