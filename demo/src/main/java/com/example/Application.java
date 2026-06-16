@@ -61,7 +61,9 @@ public String login(@RequestParam int acc_num,
         return "Invalid Login";
 
     } catch (Exception e) {
-        return e.getMessage();
+    e.printStackTrace();
+    return "ERROR: " + e.toString();
+
     }
 }
 
