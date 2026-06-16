@@ -4,7 +4,6 @@
     <title>Code Bank - Customer Login</title>
 
     <style>
-
         *{
             margin:0;
             padding:0;
@@ -64,7 +63,6 @@
             color:red;
             font-weight:bold;
         }
-
     </style>
 </head>
 
@@ -74,17 +72,11 @@
 
     <h1>CODE BANK</h1>
 
-    <input type="number"
-        id="acc_num"
-    placeholder="Account Number">
+    <input type="number" id="acc_num" placeholder="Account Number">
 
-    <input type="password"
-    id="pin"
-    placeholder="PIN">
+    <input type="password" id="pin" placeholder="PIN">
 
-    <button onclick="login()">
-        Login
-    </button>
+    <button onclick="login()">Login</button>
 
     <p id="result"></p>
 
@@ -94,48 +86,35 @@
 
 function login(){
 
-    let acc_num =
-        document.getElementById("acc_num").value;
+    let acc_num = document.getElementById("acc_num").value;
+    let pin = document.getElementById("pin").value;
 
-    let pin =
-        document.getElementById("pin").value;
-
-    fetch("https://your-app.up.railway.app/login", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({
-        acc_num: acc_num,
-        pin: pin
+    fetch("https://code-bank-management.railway.app/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            acc_num: acc_num,
+            pin: pin
+        })
     })
-})
-
-    } )
-
     .then(response => response.text())
-
     .then(data => {
 
         if(data.includes("Welcome")){
-    localStorage.setItem("customerData", data);
-    localStorage.setItem("acc_num", acc_num);
-    window.location.href = "dashboard.html";
-
-
+            localStorage.setItem("customerData", data);
+            localStorage.setItem("acc_num", acc_num);
+            window.location.href = "dashboard.html";
         }
         else{
-
-            document.getElementById("result")
-                    .innerHTML = data;
+            document.getElementById("result").innerHTML = data;
         }
 
     })
-
     .catch(error => {
-    document.getElementById("result").innerHTML =
-        "ERROR: " + error;
-
+        document.getElementById("result").innerHTML =
+            "ERROR: " + error;
     });
 
 }
