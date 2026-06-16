@@ -21,32 +21,49 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+        private Connection getConnection() throws Exception {
+
+    String host = System.getenv("MYSQLHOST");
+    String port = System.getenv("MYSQLPORT");
+    String database = System.getenv("MYSQLDATABASE");
+    String user = System.getenv("MYSQLUSER");
+    String password = System.getenv("MYSQLPASSWORD");
+
+    String url =
+        "jdbc:mysql://" + host + ":" + port + "/" + database +
+        "?useSSL=false&allowPublicKeyRetrieval=true";
+
+    return DriverManager.getConnection(url, user, password);
+}
     }
 
-    @PostMapping("/login")
-    public String login(@RequestParam int acc_num, @RequestParam int pin) {
-        try {
-            String url = System.getenv("MYSQL_URL");
-String user = System.getenv("MYSQLUSER");
-String password = System.getenv("MYSQLPASSWORD");
+   @PostMapping("/login")
+public String login(@RequestParam int acc_num,
+                    @RequestParam int pin) {
+    try {
 
-Connection con = DriverManager.getConnection(url, user, password);
-    
-            PreparedStatement pst = con.prepareStatement(
-                "SELECT * FROM account WHERE acc_num=? AND pin=?");
-            pst.setInt(1, acc_num);
-            pst.setInt(2, pin);
-            ResultSet res = pst.executeQuery();
-            if (res.next()) {
-                return "Welcome " + res.getString("name") +
-                    " | Balance: " + res.getInt("balance");
-            } else {
-                return "Invalid Login";
-            }
-        } catch (Exception e) {
-            return e.getMessage();
+        Connection con = getConnection();
+
+        PreparedStatement pst = con.prepareStatement(
+            "SELECT * FROM account WHERE acc_num=? AND pin=?");
+
+        pst.setInt(1, acc_num);
+        pst.setInt(2, pin);
+
+        ResultSet res = pst.executeQuery();
+
+        if (res.next()) {
+            return "Welcome " + res.getString("name")
+                    + " | Balance: "
+                    + res.getInt("balance");
         }
+
+        return "Invalid Login";
+
+    } catch (Exception e) {
+        return e.getMessage();
     }
+}
 
     @PostMapping("/adminLogin")
     public String adminLogin(@RequestParam String username,
@@ -64,8 +81,7 @@ Connection con = DriverManager.getConnection(url, user, password);
                             @RequestParam int pin,
                             @RequestParam int balance) {
         try {
-            Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/factory1", "root", "root");
+           Connection con = getConnection();
             PreparedStatement pst = con.prepareStatement(
                 "INSERT INTO account VALUES(?,?,?,?)");
             pst.setInt(1, acc_num);
@@ -84,8 +100,7 @@ Connection con = DriverManager.getConnection(url, user, password);
 public String updateCustomer(@RequestParam int acc_num,
                              @RequestParam String name) {
     try {
-        Connection con = DriverManager.getConnection(
-            "jdbc:mysql://localhost:3306/factory1", "root", "root");
+        Connection con = getConnection();
 
         // Check if account exists first
         PreparedStatement check = con.prepareStatement(
@@ -113,8 +128,7 @@ public String updateCustomer(@RequestParam int acc_num,
 @DeleteMapping("/deleteCustomer")
 public String deleteCustomer(@RequestParam int acc_num) {
     try {
-        Connection con = DriverManager.getConnection(
-            "jdbc:mysql://localhost:3306/factory1", "root", "root");
+       Connection con = getConnection();
 
         // Check if account exists first
         PreparedStatement check = con.prepareStatement(
@@ -140,8 +154,7 @@ public String deleteCustomer(@RequestParam int acc_num) {
                         @RequestParam int to_acc,
                         @RequestParam int amount) {
         try {
-            Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/factory1", "root", "root");
+            Connection con = getConnection();
 
             PreparedStatement check = con.prepareStatement(
                 "SELECT balance FROM account WHERE acc_num=?");
@@ -185,8 +198,7 @@ public String deleteCustomer(@RequestParam int acc_num) {
     @GetMapping("/transactions")
     public String transactions(@RequestParam int acc_num) {
         try {
-            Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/factory1", "root", "root");
+            Connection con = getConnection();
             PreparedStatement pst = con.prepareStatement(
                 "SELECT * FROM transactions WHERE from_acc=? OR to_acc=? ORDER BY txn_date DESC");
             pst.setInt(1, acc_num);
