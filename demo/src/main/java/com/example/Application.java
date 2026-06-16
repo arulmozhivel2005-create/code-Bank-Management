@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 @SpringBootApplication
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "*")
 public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
-    // ================= DATABASE CONNECTION =================
+    // ================= DB CONNECTION =================
     private Connection getConnection() throws Exception {
 
         String host = System.getenv("MYSQLHOST");
@@ -33,14 +33,14 @@ public class Application {
         return DriverManager.getConnection(url, user, password);
     }
 
-    // ================= TEST ENDPOINT =================
+    // ================= TEST =================
     @GetMapping("/testdb")
     public String testdb() {
         try {
             getConnection();
             return "Database Connected Successfully";
         } catch (Exception e) {
-            return "DB ERROR: " + e.toString();
+            return "DB ERROR: " + e.getMessage();
         }
     }
 
@@ -48,38 +48,37 @@ public class Application {
     @PostMapping("/login")
     public String login(@RequestParam int acc_num,
                         @RequestParam int pin) {
-        try {
-            Connection con = getConnection();
 
-            PreparedStatement pst = con.prepareStatement(
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        try {
+            con = getConnection();
+
+            pst = con.prepareStatement(
                     "SELECT * FROM account WHERE acc_num=? AND pin=?");
 
             pst.setInt(1, acc_num);
             pst.setInt(2, pin);
 
-            ResultSet res = pst.executeQuery();
+            rs = pst.executeQuery();
 
-            if (res.next()) {
-                return "Welcome " + res.getString("name")
-                        + " | Balance: " + res.getInt("balance");
+            if (rs.next()) {
+                return "Welcome " + rs.getString("name")
+                        + " | Balance: " + rs.getInt("balance");
             }
 
             return "Invalid Login";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
-        }
-    }
+            return "ERROR: " + e.getMessage();
 
-    // ================= ADMIN LOGIN =================
-    @PostMapping("/adminLogin")
-    public String adminLogin(@RequestParam String username,
-                             @RequestParam String password) {
-
-        if ("admin".equals(username) && "admin123".equals(password)) {
-            return "Admin Login Success";
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception e) {}
+            try { if (pst != null) pst.close(); } catch (Exception e) {}
+            try { if (con != null) con.close(); } catch (Exception e) {}
         }
-        return "Invalid Admin";
     }
 
     // ================= ADD CUSTOMER =================
@@ -88,11 +87,10 @@ public class Application {
                               @RequestParam String name,
                               @RequestParam int pin,
                               @RequestParam int balance) {
-        try {
-            Connection con = getConnection();
 
-            PreparedStatement pst = con.prepareStatement(
-                    "INSERT INTO account VALUES(?,?,?,?)");
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(
+                     "INSERT INTO account VALUES(?,?,?,?)")) {
 
             pst.setInt(1, acc_num);
             pst.setString(2, name);
@@ -103,66 +101,62 @@ public class Application {
             return "Customer Added Successfully";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
+            return "ERROR: " + e.getMessage();
         }
     }
 
-    // ================= UPDATE CUSTOMER =================
+    // ================= UPDATE =================
     @PutMapping("/updateCustomer")
     public String updateCustomer(@RequestParam int acc_num,
                                  @RequestParam String name) {
-        try {
-            Connection con = getConnection();
 
-            PreparedStatement pst = con.prepareStatement(
-                    "UPDATE account SET name=? WHERE acc_num=?");
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(
+                     "UPDATE account SET name=? WHERE acc_num=?")) {
 
             pst.setString(1, name);
             pst.setInt(2, acc_num);
 
             int rows = pst.executeUpdate();
-
-            return rows > 0 ? "Customer Updated Successfully" : "Account Not Found";
+            return rows > 0 ? "Updated Successfully" : "Account Not Found";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
+            return "ERROR: " + e.getMessage();
         }
     }
 
-    // ================= DELETE CUSTOMER =================
+    // ================= DELETE =================
     @DeleteMapping("/deleteCustomer")
     public String deleteCustomer(@RequestParam int acc_num) {
-        try {
-            Connection con = getConnection();
 
-            PreparedStatement pst = con.prepareStatement(
-                    "DELETE FROM account WHERE acc_num=?");
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(
+                     "DELETE FROM account WHERE acc_num=?")) {
 
             pst.setInt(1, acc_num);
 
             int rows = pst.executeUpdate();
-
-            return rows > 0 ? "Customer Deleted Successfully" : "Account Not Found";
+            return rows > 0 ? "Deleted Successfully" : "Account Not Found";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
+            return "ERROR: " + e.getMessage();
         }
     }
 
     // ================= TRANSFER =================
     @PostMapping("/transfer")
     public String transfer(@RequestParam int from_acc,
-                            @RequestParam int to_acc,
-                            @RequestParam int amount) {
-        try {
-            Connection con = getConnection();
+                           @RequestParam int to_acc,
+                           @RequestParam int amount) {
+
+        try (Connection con = getConnection()) {
 
             PreparedStatement check = con.prepareStatement(
                     "SELECT balance FROM account WHERE acc_num=?");
             check.setInt(1, from_acc);
             ResultSet rs = check.executeQuery();
 
-            if (!rs.next()) return "Sender not found";
+            if (!rs.next()) return "Sender Not Found";
 
             int balance = rs.getInt("balance");
             if (balance < amount) return "Insufficient Balance";
@@ -189,38 +183,38 @@ public class Application {
             return "Transfer Successful";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
+            return "ERROR: " + e.getMessage();
         }
     }
 
     // ================= TRANSACTIONS =================
     @GetMapping("/transactions")
     public String transactions(@RequestParam int acc_num) {
-        try {
-            Connection con = getConnection();
 
-            PreparedStatement pst = con.prepareStatement(
-                    "SELECT * FROM transactions WHERE from_acc=? OR to_acc=? ORDER BY txn_date DESC");
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(
+                     "SELECT * FROM transactions WHERE from_acc=? OR to_acc=?")) {
 
             pst.setInt(1, acc_num);
             pst.setInt(2, acc_num);
 
             ResultSet rs = pst.executeQuery();
 
-            StringBuilder result = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             while (rs.next()) {
-                result.append(rs.getInt("id")).append(",")
+                sb.append(rs.getInt("id")).append(",")
                         .append(rs.getInt("from_acc")).append(",")
                         .append(rs.getInt("to_acc")).append(",")
                         .append(rs.getInt("amount")).append(",")
-                        .append(rs.getTimestamp("txn_date")).append(";");
+                        .append(rs.getTimestamp("txn_date"))
+                        .append(";");
             }
 
-            return result.length() > 0 ? result.toString() : "No Transactions";
+            return sb.length() > 0 ? sb.toString() : "No Transactions";
 
         } catch (Exception e) {
-            return "ERROR: " + e.toString();
+            return "ERROR: " + e.getMessage();
         }
     }
 }
