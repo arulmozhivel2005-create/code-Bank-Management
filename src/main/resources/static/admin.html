@@ -100,30 +100,9 @@
 const BASE_URL = "https://code-bank-management.railway.app";
 
 // ================= ADMIN LOGIN =================
-function adminLogin() {
 
-    let username = document.getElementById("username").value;
-    let password = document.getElementById("password").value;
 
-    fetch(BASE_URL + "/adminLogin", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-            username: username,
-            password: password
-        })
-    })
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("loginResult").innerText = data;
-    })
-    .catch(err => {
-        document.getElementById("loginResult").innerText = err;
-    });
-}
-
+    
 // ================= ADD CUSTOMER =================
 function addCustomer() {
 
