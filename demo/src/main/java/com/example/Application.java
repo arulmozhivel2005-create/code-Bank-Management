@@ -21,6 +21,10 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+         @GetMapping("/testdb")
+    public String testdb() {
+        return "Working";
+    }
         private Connection getConnection() throws Exception {
 
     String host = System.getenv("MYSQLHOST");
@@ -34,18 +38,11 @@ public class Application {
         "?useSSL=false&allowPublicKeyRetrieval=true";
 
     return DriverManager.getConnection(url, user, password);
+        
 }
+    
     }
-@GetMapping("/testdb")
-public String testdb() {
-    try {
-        Connection con = getConnection();
-        return "Database Connected Successfully";
-    } catch (Exception e) {
-        e.printStackTrace();
-        return e.toString();
-    }
-}
+
 
    @PostMapping("/login")
 public String login(@RequestParam int acc_num,
