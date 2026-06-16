@@ -103,7 +103,7 @@ function login(){
     fetch(`/login?acc_num=${acc_num}&pin=${pin}`,{
     method:"POST"
 
-    )
+    } )
 
     .then(response => response.text())
 
