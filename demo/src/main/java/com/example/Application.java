@@ -36,6 +36,16 @@ public class Application {
     return DriverManager.getConnection(url, user, password);
 }
     }
+@GetMapping("/testdb")
+public String testdb() {
+    try {
+        Connection con = getConnection();
+        return "Database Connected Successfully";
+    } catch (Exception e) {
+        e.printStackTrace();
+        return e.toString();
+    }
+}
 
    @PostMapping("/login")
 public String login(@RequestParam int acc_num,
