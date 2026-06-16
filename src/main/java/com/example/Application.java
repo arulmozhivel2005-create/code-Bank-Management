@@ -43,6 +43,27 @@ public class Application {
             return "DB ERROR: " + e.getMessage();
         }
     }
+    // ================= ADMIN LOGIN =================
+@PostMapping("/adminLogin")
+public String adminLogin(
+        @RequestParam String username,
+        @RequestParam String password) {
+
+    try {
+
+        if ("admin".equals(username) &&
+            "admin123".equals(password)) {
+
+            return "Admin Login Success";
+        }
+
+        return "Invalid Admin Credentials";
+
+    } catch (Exception e) {
+
+        return "ERROR: " + e.getMessage();
+    }
+}
 
     // ================= LOGIN =================
     @PostMapping("/login")
