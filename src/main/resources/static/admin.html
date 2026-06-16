@@ -1,182 +1,299 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Code Bank - Admin Panel</title>
+    <title>Code Bank - Admin Dashboard</title>
 
     <style>
-        body {
-            font-family: Arial;
-            background: #f2f2f2;
-            padding: 20px;
+        body{
+            font-family:Arial;
+            background:#f2f2f2;
+            padding:20px;
         }
 
-        .box {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        .box{
+            background:white;
+            padding:20px;
+            margin-bottom:20px;
+            border-radius:10px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
         }
 
-        input {
-            padding: 10px;
-            margin: 5px;
-            width: 200px;
+        input{
+            padding:10px;
+            margin:5px;
+            width:220px;
         }
 
-        button {
-            padding: 10px 15px;
-            background: #003366;
-            color: white;
-            border: none;
-            cursor: pointer;
+        button{
+            padding:10px 15px;
+            background:#003366;
+            color:white;
+            border:none;
+            cursor:pointer;
         }
 
-        button:hover {
-            background: #0055aa;
+        button:hover{
+            background:#0055aa;
         }
 
-        h2 {
-            color: #003366;
+        h1,h2{
+            color:#003366;
+        }
+
+        #adminActions{
+            display:none;
         }
     </style>
 </head>
 
 <body>
 
-<h1>ADMIN DASHBOARD</h1>
+<h1>CODE BANK - ADMIN PANEL</h1>
 
-<!-- ================= ADMIN LOGIN ================= -->
-<div class="box">
+<!-- LOGIN -->
+
+<div class="box" id="loginBox">
+
     <h2>Admin Login</h2>
 
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+    <input type="text"
+           id="username"
+           placeholder="Username">
 
-    <button onclick="adminLogin()">Login</button>
+    <input type="password"
+           id="password"
+           placeholder="Password">
+
+    <br><br>
+
+    <button onclick="adminLogin()">
+        Login
+    </button>
 
     <p id="loginResult"></p>
+
 </div>
 
-<!-- ================= ADD CUSTOMER ================= -->
-<div class="box">
-    <h2>Add Customer</h2>
+<!-- DASHBOARD -->
 
-    <input type="number" id="acc_num" placeholder="Account Number">
-    <input type="text" id="name" placeholder="Name">
-    <input type="number" id="pin" placeholder="PIN">
-    <input type="number" id="balance" placeholder="Balance">
+<div id="adminActions">
 
-    <button onclick="addCustomer()">Add</button>
+    <!-- ADD CUSTOMER -->
 
-    <p id="addResult"></p>
-</div>
+    <div class="box">
 
-<!-- ================= UPDATE CUSTOMER ================= -->
-<div class="box">
-    <h2>Update Customer</h2>
+        <h2>Add Customer</h2>
 
-    <input type="number" id="u_acc" placeholder="Account Number">
-    <input type="text" id="u_name" placeholder="New Name">
+        <input type="number" id="acc_num" placeholder="Account Number">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="pin" placeholder="PIN">
+        <input type="number" id="balance" placeholder="Balance">
 
-    <button onclick="updateCustomer()">Update</button>
+        <br><br>
 
-    <p id="updateResult"></p>
-</div>
+        <button onclick="addCustomer()">
+            Add Customer
+        </button>
 
-<!-- ================= DELETE CUSTOMER ================= -->
-<div class="box">
-    <h2>Delete Customer</h2>
+        <p id="addResult"></p>
 
-    <input type="number" id="d_acc" placeholder="Account Number">
+    </div>
 
-    <button onclick="deleteCustomer()">Delete</button>
+    <!-- UPDATE CUSTOMER -->
 
-    <p id="deleteResult"></p>
+    <div class="box">
+
+        <h2>Update Customer</h2>
+
+        <input type="number"
+               id="u_acc"
+               placeholder="Account Number">
+
+        <input type="text"
+               id="u_name"
+               placeholder="New Name">
+
+        <br><br>
+
+        <button onclick="updateCustomer()">
+            Update Customer
+        </button>
+
+        <p id="updateResult"></p>
+
+    </div>
+
+    <!-- DELETE CUSTOMER -->
+
+    <div class="box">
+
+        <h2>Delete Customer</h2>
+
+        <input type="number"
+               id="d_acc"
+               placeholder="Account Number">
+
+        <br><br>
+
+        <button onclick="deleteCustomer()">
+            Delete Customer
+        </button>
+
+        <p id="deleteResult"></p>
+
+    </div>
+
 </div>
 
 <script>
 
-const BASE_URL = "https://code-bank-management.up.railway.app";
+const BASE_URL =
+"https://code-bank-management.up.railway.app";
 
-// ================= ADMIN LOGIN =================
 
+// ADMIN LOGIN
 
-    
-// ================= ADD CUSTOMER =================
-function addCustomer() {
+function adminLogin(){
 
-    let acc_num = document.getElementById("acc_num").value;
-    let name = document.getElementById("name").value;
-    let pin = document.getElementById("pin").value;
-    let balance = document.getElementById("balance").value;
+    let username =
+    document.getElementById("username").value;
 
-    fetch(BASE_URL + "/addCustomer", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+    let password =
+    document.getElementById("password").value;
+
+    fetch(BASE_URL + "/adminLogin", {
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":
+            "application/x-www-form-urlencoded"
         },
-        body: new URLSearchParams({
-            acc_num: acc_num,
-            name: name,
-            pin: pin,
-            balance: balance
+
+        body:new URLSearchParams({
+            username:username,
+            password:password
         })
+
     })
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("addResult").innerText = data;
+
+    .then(res=>res.text())
+
+    .then(data=>{
+
+        document.getElementById(
+        "loginResult").innerText=data;
+
+        if(data.includes(
+        "Admin Login Success")){
+
+            document.getElementById(
+            "loginBox").style.display="none";
+
+            document.getElementById(
+            "adminActions").style.display="block";
+        }
     })
-    .catch(err => {
-        document.getElementById("addResult").innerText = err;
+
+    .catch(err=>{
+        document.getElementById(
+        "loginResult").innerText=err;
     });
 }
 
-// ================= UPDATE CUSTOMER =================
-function updateCustomer() {
 
-    let acc_num = document.getElementById("u_acc").value;
-    let name = document.getElementById("u_name").value;
+// ADD CUSTOMER
 
-    fetch(BASE_URL + "/updateCustomer", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+function addCustomer(){
+
+    fetch(BASE_URL + "/addCustomer",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":
+            "application/x-www-form-urlencoded"
         },
-        body: new URLSearchParams({
-            acc_num: acc_num,
-            name: name
+
+        body:new URLSearchParams({
+
+            acc_num:
+            document.getElementById("acc_num").value,
+
+            name:
+            document.getElementById("name").value,
+
+            pin:
+            document.getElementById("pin").value,
+
+            balance:
+            document.getElementById("balance").value
         })
     })
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("updateResult").innerText = data;
-    })
-    .catch(err => {
-        document.getElementById("updateResult").innerText = err;
+
+    .then(res=>res.text())
+    .then(data=>{
+        document.getElementById(
+        "addResult").innerText=data;
     });
 }
 
-// ================= DELETE CUSTOMER =================
-function deleteCustomer() {
 
-    let acc_num = document.getElementById("d_acc").value;
+// UPDATE CUSTOMER
 
-    fetch(BASE_URL + "/deleteCustomer", {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+function updateCustomer(){
+
+    fetch(BASE_URL + "/updateCustomer",{
+
+        method:"PUT",
+
+        headers:{
+            "Content-Type":
+            "application/x-www-form-urlencoded"
         },
-        body: new URLSearchParams({
-            acc_num: acc_num
+
+        body:new URLSearchParams({
+
+            acc_num:
+            document.getElementById("u_acc").value,
+
+            name:
+            document.getElementById("u_name").value
         })
     })
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("deleteResult").innerText = data;
+
+    .then(res=>res.text())
+    .then(data=>{
+        document.getElementById(
+        "updateResult").innerText=data;
+    });
+}
+
+
+// DELETE CUSTOMER
+
+function deleteCustomer(){
+
+    fetch(BASE_URL + "/deleteCustomer",{
+
+        method:"DELETE",
+
+        headers:{
+            "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+
+        body:new URLSearchParams({
+
+            acc_num:
+            document.getElementById("d_acc").value
+        })
     })
-    .catch(err => {
-        document.getElementById("deleteResult").innerText = err;
+
+    .then(res=>res.text())
+    .then(data=>{
+        document.getElementById(
+        "deleteResult").innerText=data;
     });
 }
 
