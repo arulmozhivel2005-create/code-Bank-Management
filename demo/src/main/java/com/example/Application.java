@@ -26,8 +26,12 @@ public class Application {
     @PostMapping("/login")
     public String login(@RequestParam int acc_num, @RequestParam int pin) {
         try {
-            Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/factory1", "root", "root");
+            String url = System.getenv("MYSQL_URL");
+String user = System.getenv("MYSQLUSER");
+String password = System.getenv("MYSQLPASSWORD");
+
+Connection con = DriverManager.getConnection(url, user, password);
+    
             PreparedStatement pst = con.prepareStatement(
                 "SELECT * FROM account WHERE acc_num=? AND pin=?");
             pst.setInt(1, acc_num);
