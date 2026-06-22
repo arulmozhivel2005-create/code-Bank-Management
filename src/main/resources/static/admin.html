@@ -1,173 +1,136 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Code Bank - Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Admin Login - Code Bank</title>
 
     <style>
-        body{
-            font-family:Arial;
-            background:#f2f2f2;
-            padding:20px;
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
         }
 
-        .box{
-            background:white;
-            padding:20px;
-            margin-bottom:20px;
-            border-radius:10px;
-            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        body{
+            background:url("https://yi-files.yellowimages.com/products/1041000/1041105/1734614-full.jpg") no-repeat center center/cover;
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .login-box{
+            width:380px;
+            background:rgba(255,255,255,0.95);
+            padding:30px;
+            border-radius:15px;
+            box-shadow:0 0 15px rgba(0,0,0,0.3);
+            text-align:center;
+        }
+
+        h1{
+            color:#003366;
+            margin-bottom:10px;
+        }
+
+        h3{
+            color:#555;
+            margin-bottom:25px;
         }
 
         input{
-            padding:10px;
-            margin:5px;
-            width:220px;
+            width:100%;
+            padding:12px;
+            margin:10px 0;
+            border:1px solid #ccc;
+            border-radius:5px;
+            font-size:15px;
         }
 
         button{
-            padding:10px 15px;
+            width:100%;
+            padding:12px;
+            margin-top:15px;
             background:#003366;
             color:white;
             border:none;
+            border-radius:5px;
             cursor:pointer;
+            font-size:16px;
         }
 
         button:hover{
             background:#0055aa;
         }
 
-        h1,h2{
-            color:#003366;
+        #loginResult{
+            margin-top:15px;
+            font-weight:bold;
+            color:red;
         }
 
-        #adminActions{
-            display:none;
+        .back-btn{
+            background:#666;
+            margin-top:10px;
+        }
+
+        .back-btn:hover{
+            background:#444;
         }
     </style>
 </head>
 
 <body>
 
-<h1>CODE BANK - ADMIN PANEL</h1>
+<div class="login-box">
 
-<!-- LOGIN -->
+    <h1>🏦 CODE BANK</h1>
+    <h3>Admin Login</h3>
 
-<div class="box" id="loginBox">
+    <input
+        type="text"
+        id="username"
+        placeholder="Enter Username">
 
-    <h2>Admin Login</h2>
-
-    <input type="text"
-           id="username"
-           placeholder="Username">
-
-    <input type="password"
-           id="password"
-           placeholder="Password">
-
-    <br><br>
+    <input
+        type="password"
+        id="password"
+        placeholder="Enter Password">
 
     <button onclick="adminLogin()">
         Login
+    </button>
+
+    <button class="back-btn" onclick="goHome()">
+        Back
     </button>
 
     <p id="loginResult"></p>
 
 </div>
 
-<!-- DASHBOARD -->
-
-<div id="adminActions">
-
-    <!-- ADD CUSTOMER -->
-
-    <div class="box">
-
-        <h2>Add Customer</h2>
-
-        <input type="number" id="acc_num" placeholder="Account Number">
-        <input type="text" id="name" placeholder="Name">
-        <input type="number" id="pin" placeholder="PIN">
-        <input type="number" id="balance" placeholder="Balance">
-
-        <br><br>
-
-        <button onclick="addCustomer()">
-            Add Customer
-        </button>
-
-        <p id="addResult"></p>
-
-    </div>
-
-    <!-- UPDATE CUSTOMER -->
-
-    <div class="box">
-
-        <h2>Update Customer</h2>
-
-        <input type="number"
-               id="u_acc"
-               placeholder="Account Number">
-
-        <input type="text"
-               id="u_name"
-               placeholder="New Name">
-
-        <br><br>
-
-        <button onclick="updateCustomer()">
-            Update Customer
-        </button>
-
-        <p id="updateResult"></p>
-
-    </div>
-
-    <!-- DELETE CUSTOMER -->
-
-    <div class="box">
-
-        <h2>Delete Customer</h2>
-
-        <input type="number"
-               id="d_acc"
-               placeholder="Account Number">
-
-        <br><br>
-
-        <button onclick="deleteCustomer()">
-            Delete Customer
-        </button>
-
-        <p id="deleteResult"></p>
-
-    </div>
-
-</div>
-
 <script>
 
-const BASE_URL =
-"https://code-bank-management.up.railway.app";
-
-
-// ADMIN LOGIN
+const BASE_URL = "https://code-bank-management.up.railway.app";
 
 function adminLogin(){
 
-    let username =
-    document.getElementById("username").value;
+    let username = document.getElementById("username").value.trim();
+    let password = document.getElementById("password").value.trim();
 
-    let password =
-    document.getElementById("password").value;
+    if(username==="" || password===""){
+        document.getElementById("loginResult").innerText =
+        "Please enter username and password.";
+        return;
+    }
 
-    fetch(BASE_URL + "/adminLogin", {
+    fetch(BASE_URL + "/adminLogin",{
 
         method:"POST",
 
         headers:{
-            "Content-Type":
-            "application/x-www-form-urlencoded"
+            "Content-Type":"application/x-www-form-urlencoded"
         },
 
         body:new URLSearchParams({
@@ -181,121 +144,45 @@ function adminLogin(){
 
     .then(data=>{
 
-        document.getElementById(
-        "loginResult").innerText=data;
+        if(data.includes("Admin Login Success")){
 
-        if(data.includes(
-        "Admin Login Success")){
+            // Clear login fields
+            document.getElementById("username").value="";
+            document.getElementById("password").value="";
+            document.getElementById("loginResult").innerText="";
 
-            document.getElementById(
-            "loginBox").style.display="none";
+            // Redirect to dashboard
+            window.location.href="admindashboard.html";
 
-            document.getElementById(
-            "adminActions").style.display="block";
+        }else{
+
+            document.getElementById("loginResult").innerText=data;
+
+            // Clear password after failed login
+            document.getElementById("password").value="";
         }
+
     })
 
-    .catch(err=>{
-        document.getElementById(
-        "loginResult").innerText=err;
+    .catch(()=>{
+
+        document.getElementById("loginResult").innerText=
+        "Unable to connect to server.";
+
     });
+
 }
 
-
-// ADD CUSTOMER
-
-function addCustomer(){
-
-    fetch(BASE_URL + "/addCustomer",{
-
-        method:"POST",
-
-        headers:{
-            "Content-Type":
-            "application/x-www-form-urlencoded"
-        },
-
-        body:new URLSearchParams({
-
-            acc_num:
-            document.getElementById("acc_num").value,
-
-            name:
-            document.getElementById("name").value,
-
-            pin:
-            document.getElementById("pin").value,
-
-            balance:
-            document.getElementById("balance").value
-        })
-    })
-
-    .then(res=>res.text())
-    .then(data=>{
-        document.getElementById(
-        "addResult").innerText=data;
-    });
+function goHome(){
+    window.location.href="index.html";
 }
 
-
-// UPDATE CUSTOMER
-
-function updateCustomer(){
-
-    fetch(BASE_URL + "/updateCustomer",{
-
-        method:"PUT",
-
-        headers:{
-            "Content-Type":
-            "application/x-www-form-urlencoded"
-        },
-
-        body:new URLSearchParams({
-
-            acc_num:
-            document.getElementById("u_acc").value,
-
-            name:
-            document.getElementById("u_name").value
-        })
-    })
-
-    .then(res=>res.text())
-    .then(data=>{
-        document.getElementById(
-        "updateResult").innerText=data;
-    });
-}
-
-
-// DELETE CUSTOMER
-
-function deleteCustomer(){
-
-    fetch(BASE_URL + "/deleteCustomer",{
-
-        method:"DELETE",
-
-        headers:{
-            "Content-Type":
-            "application/x-www-form-urlencoded"
-        },
-
-        body:new URLSearchParams({
-
-            acc_num:
-            document.getElementById("d_acc").value
-        })
-    })
-
-    .then(res=>res.text())
-    .then(data=>{
-        document.getElementById(
-        "deleteResult").innerText=data;
-    });
-}
+// Press Enter to login
+document.addEventListener("keypress",function(event){
+    if(event.key==="Enter"){
+        adminLogin();
+    }
+});
 
 </script>
 
