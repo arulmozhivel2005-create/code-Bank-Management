@@ -188,11 +188,20 @@ public String adminLogin(
             deduct.setInt(2, from_acc);
             deduct.executeUpdate();
 
-            PreparedStatement add = con.prepareStatement(
-                    "UPDATE account SET balance=balance+? WHERE acc_num=?");
-            add.setInt(1, amount);
-            add.setInt(2, to_acc);
-            add.executeUpdate();
+            PreparedStatement receiver = con.prepareStatement(
+        "SELECT * FROM account WHERE acc_num=?");
+receiver.setInt(1, to_acc);
+ResultSet rs2 = receiver.executeQuery();
+
+if (!rs2.next()) {
+    return "Receiver Not Found";
+}
+
+PreparedStatement add = con.prepareStatement(
+        "UPDATE account SET balance=balance+? WHERE acc_num=?");
+add.setInt(1, amount);
+add.setInt(2, to_acc);
+add.executeUpdate();
 
             PreparedStatement log = con.prepareStatement(
                     "INSERT INTO transactions(from_acc,to_acc,amount) VALUES(?,?,?)");
