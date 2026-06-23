@@ -176,7 +176,7 @@ function transfer(){
         return;
     }
 
-    fetch(`http://localhost:8080/transfer?from_acc=${acc_num}&to_acc=${to_acc}&amount=${amount}`,
+   fetch(`${BASE_URL}/transfer?from_acc=${acc_num}&to_acc=${to_acc}&amount=${amount}`,
         { method:"POST" })
     .then(res => res.text())
     .then(data => {
@@ -197,7 +197,7 @@ function transfer(){
 
 // LOAD TRANSACTION HISTORY
 function loadTransactions(){
-    fetch(`http://localhost:8080/transactions?acc_num=${acc_num}`)
+    fetch(`${BASE_URL}/transactions?acc_num=${acc_num}`)
     .then(res => res.text())
     .then(data => {
         let container = document.getElementById("txnTable");
