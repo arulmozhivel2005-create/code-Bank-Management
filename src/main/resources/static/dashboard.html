@@ -159,7 +159,6 @@ if(!customerData){
 
 document.getElementById("welcome").innerHTML = customerData;
 
-// TRANSFER FUNCTION
 function transfer(){
     let to_acc = document.getElementById("to_acc").value;
     let amount = document.getElementById("amount").value;
@@ -177,13 +176,19 @@ function transfer(){
         return;
     }
 
-   fetch(`${BASE_URL}/transfer?from_acc=${acc_num}&to_acc=${to_acc}&amount=${amount}`,
+    fetch(`${BASE_URL}/transfer?from_acc=${acc_num}&to_acc=${to_acc}&amount=${amount}`,
         { method:"POST" })
     .then(res => res.text())
     .then(data => {
         if(data === "Transfer Successful"){
             resultEl.className = "result success";
             resultEl.innerHTML = "✅ " + data;
+
+            // Clear the input fields
+            document.getElementById("to_acc").value = "";
+            document.getElementById("amount").value = "";
+
+            // Reload transaction history
             loadTransactions();
         } else {
             resultEl.className = "result error";
@@ -252,8 +257,6 @@ function logout(){
     window.location.href = "customer.html";
 }
 
-// Auto load transactions on page open
-loadTransactions();
 
 </script>
 </body>
