@@ -132,16 +132,16 @@ tr:hover { background:#f5f5f5; }
 
     <!-- TRANSACTION HISTORY CARD -->
     <div class="card">
-        <h2>📋 Transaction History</h2>
-        <button onclick="loadTransactions()" 
-                style="background:#1b5e20; margin-bottom:10px;">
-            🔄 Refresh History
-        </button>
-        <div id="txnTable"></div>
-    </div>
+    <h2>📋 Transaction History</h2>
 
+    <button id="historyBtn"
+            onclick="toggleHistory()"
+            style="background:#1b5e20; margin-bottom:10px;">
+        📋 View Transaction History
+    </button>
+
+    <div id="txnTable" style="display:none;"></div>
 </div>
-
 <div class="logout">
     <button onclick="logout()">🚪 Logout</button>
 </div>
@@ -199,6 +199,26 @@ function transfer(){
         resultEl.className = "result error";
         resultEl.innerHTML = "❌ Server Connection Error";
     });
+}
+    function toggleHistory(){
+
+    let table = document.getElementById("txnTable");
+
+    if(table.style.display === "none"){
+
+        table.style.display = "block";
+        loadTransactions();
+
+        document.getElementById("historyBtn").innerHTML =
+        "❌ Hide Transaction History";
+
+    }else{
+
+        table.style.display = "none";
+
+        document.getElementById("historyBtn").innerHTML =
+        "📋 View Transaction History";
+    }
 }
 
 // LOAD TRANSACTION HISTORY
