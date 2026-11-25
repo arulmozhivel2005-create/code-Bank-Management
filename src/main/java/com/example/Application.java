@@ -1,9 +1,11 @@
+
 package com.example;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,29 +29,60 @@ public class Application {
         String user = System.getenv("MYSQLUSER");
         String password = System.getenv("MYSQLPASSWORD");
 
-        String url = "jdbc:mysql://" + host + ":" + port + "/" + database +
-                "?useSSL=false&allowPublicKeyRetrieval=true";
+        String url = "jdbc:mysql://" + host + ":" + port + "/" + database
+                + "?sslMode=REQUIRED";
 
         return DriverManager.getConnection(url, user, password);
     }
 
-    // ================= TEST =================
+    // ================= TEST DATABASE =================
     @GetMapping("/testdb")
     public String testdb() {
-        try {
-            getConnection();
+
+        try (Connection con = getConnection()) {
             return "Database Connected Successfully";
+
         } catch (Exception e) {
             return "DB ERROR: " + e.getMessage();
         }
     }
-    // ================= ADMIN LOGIN =================
-@PostMapping("/adminLogin")
-public String adminLogin(
-        @RequestParam String username,
-        @RequestParam String password) {
 
-    try {
+    // ================= CREATE DATABASE TABLES =================
+    @GetMapping("/setupdb")
+    public String setupdb() {
+
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement()) {
+
+            stmt.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS account (" +
+                "acc_num INT PRIMARY KEY, " +
+                "name VARCHAR(100) NOT NULL, " +
+                "pin INT NOT NULL, " +
+                "balance INT NOT NULL)"
+            );
+
+            stmt.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS transactions (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "from_acc INT NOT NULL, " +
+                "to_acc INT NOT NULL, " +
+                "amount INT NOT NULL, " +
+                "txn_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            );
+
+            return "Account and Transactions tables created successfully";
+
+        } catch (Exception e) {
+            return "SETUP ERROR: " + e.getMessage();
+        }
+    }
+
+    // ================= ADMIN LOGIN =================
+    @PostMapping("/adminLogin")
+    public String adminLogin(
+            @RequestParam String username,
+            @RequestParam String password) {
 
         if ("admin".equals(username) &&
             "admin123".equals(password)) {
@@ -58,60 +91,55 @@ public String adminLogin(
         }
 
         return "Invalid Admin Credentials";
-
-    } catch (Exception e) {
-
-        return "ERROR: " + e.getMessage();
     }
-}
 
-    // ================= LOGIN =================
+    // ================= CUSTOMER LOGIN =================
     @PostMapping("/login")
-    public String login(@RequestParam int acc_num,
-                        @RequestParam int pin) {
+    public String login(
+            @RequestParam int acc_num,
+            @RequestParam int pin) {
 
-        Connection con = null;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
+        String sql =
+            "SELECT * FROM account WHERE acc_num=? AND pin=?";
 
-        try {
-            con = getConnection();
-
-            pst = con.prepareStatement(
-                    "SELECT * FROM account WHERE acc_num=? AND pin=?");
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setInt(1, acc_num);
             pst.setInt(2, pin);
 
-            rs = pst.executeQuery();
+            try (ResultSet rs = pst.executeQuery()) {
 
-            if (rs.next()) {
-                return "Welcome " + rs.getString("name")
-                        + " | Balance: " + rs.getInt("balance");
+                if (rs.next()) {
+                    return "Welcome " + rs.getString("name")
+                            + " | Balance: " + rs.getInt("balance");
+                }
             }
 
             return "Invalid Login";
 
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
-
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (pst != null) pst.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
         }
     }
 
     // ================= ADD CUSTOMER =================
     @PostMapping("/addCustomer")
-    public String addCustomer(@RequestParam int acc_num,
-                              @RequestParam String name,
-                              @RequestParam int pin,
-                              @RequestParam int balance) {
+    public String addCustomer(
+            @RequestParam int acc_num,
+            @RequestParam String name,
+            @RequestParam int pin,
+            @RequestParam int balance) {
+
+        if (balance < 0 || pin < 0) {
+            return "Invalid PIN or Balance";
+        }
+
+        String sql =
+            "INSERT INTO account (acc_num,name,pin,balance) VALUES(?,?,?,?)";
 
         try (Connection con = getConnection();
-             PreparedStatement pst = con.prepareStatement(
-                     "INSERT INTO account VALUES(?,?,?,?)")) {
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setInt(1, acc_num);
             pst.setString(2, name);
@@ -119,6 +147,7 @@ public String adminLogin(
             pst.setInt(4, balance);
 
             pst.executeUpdate();
+
             return "Customer Added Successfully";
 
         } catch (Exception e) {
@@ -126,122 +155,217 @@ public String adminLogin(
         }
     }
 
-    // ================= UPDATE =================
+    // ================= UPDATE CUSTOMER =================
     @PutMapping("/updateCustomer")
-    public String updateCustomer(@RequestParam int acc_num,
-                                 @RequestParam String name) {
+    public String updateCustomer(
+            @RequestParam int acc_num,
+            @RequestParam String name) {
+
+        String sql =
+            "UPDATE account SET name=? WHERE acc_num=?";
 
         try (Connection con = getConnection();
-             PreparedStatement pst = con.prepareStatement(
-                     "UPDATE account SET name=? WHERE acc_num=?")) {
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setString(1, name);
             pst.setInt(2, acc_num);
 
             int rows = pst.executeUpdate();
-            return rows > 0 ? "Updated Successfully" : "Account Not Found";
+
+            return rows > 0
+                    ? "Updated Successfully"
+                    : "Account Not Found";
 
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
     }
 
-    // ================= DELETE =================
+    // ================= DELETE CUSTOMER =================
     @DeleteMapping("/deleteCustomer")
-    public String deleteCustomer(@RequestParam int acc_num) {
+    public String deleteCustomer(
+            @RequestParam int acc_num) {
+
+        String sql =
+            "DELETE FROM account WHERE acc_num=?";
 
         try (Connection con = getConnection();
-             PreparedStatement pst = con.prepareStatement(
-                     "DELETE FROM account WHERE acc_num=?")) {
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setInt(1, acc_num);
 
             int rows = pst.executeUpdate();
-            return rows > 0 ? "Deleted Successfully" : "Account Not Found";
+
+            return rows > 0
+                    ? "Deleted Successfully"
+                    : "Account Not Found";
 
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
     }
 
-    // ================= TRANSFER =================
+    // ================= MONEY TRANSFER =================
     @PostMapping("/transfer")
-    public String transfer(@RequestParam int from_acc,
-                           @RequestParam int to_acc,
-                           @RequestParam int amount) {
+    public String transfer(
+            @RequestParam int from_acc,
+            @RequestParam int to_acc,
+            @RequestParam int amount) {
 
-        try (Connection con = getConnection()) {
+        if (amount <= 0) {
+            return "Invalid Transfer Amount";
+        }
 
-            PreparedStatement check = con.prepareStatement(
-                    "SELECT balance FROM account WHERE acc_num=?");
-            check.setInt(1, from_acc);
-            ResultSet rs = check.executeQuery();
+        if (from_acc == to_acc) {
+            return "Cannot Transfer To The Same Account";
+        }
 
-            if (!rs.next()) return "Sender Not Found";
+        Connection con = null;
 
-            int balance = rs.getInt("balance");
-            if (balance < amount) return "Insufficient Balance";
+        try {
+            con = getConnection();
+            con.setAutoCommit(false);
 
-            PreparedStatement deduct = con.prepareStatement(
-                    "UPDATE account SET balance=balance-? WHERE acc_num=?");
-            deduct.setInt(1, amount);
-            deduct.setInt(2, from_acc);
-            deduct.executeUpdate();
+            // Check sender and lock their account row
+            String senderSql =
+                "SELECT balance FROM account WHERE acc_num=? FOR UPDATE";
 
-            PreparedStatement receiver = con.prepareStatement(
-        "SELECT * FROM account WHERE acc_num=?");
-receiver.setInt(1, to_acc);
-ResultSet rs2 = receiver.executeQuery();
+            try (PreparedStatement check =
+                    con.prepareStatement(senderSql)) {
 
-if (!rs2.next()) {
-    return "Receiver Not Found";
-}
+                check.setInt(1, from_acc);
 
-PreparedStatement add = con.prepareStatement(
-        "UPDATE account SET balance=balance+? WHERE acc_num=?");
-add.setInt(1, amount);
-add.setInt(2, to_acc);
-add.executeUpdate();
+                try (ResultSet rs = check.executeQuery()) {
 
-            PreparedStatement log = con.prepareStatement(
-                    "INSERT INTO transactions(from_acc,to_acc,amount) VALUES(?,?,?)");
-            log.setInt(1, from_acc);
-            log.setInt(2, to_acc);
-            log.setInt(3, amount);
-            log.executeUpdate();
+                    if (!rs.next()) {
+                        con.rollback();
+                        return "Sender Not Found";
+                    }
+
+                    if (rs.getInt("balance") < amount) {
+                        con.rollback();
+                        return "Insufficient Balance";
+                    }
+                }
+            }
+
+            // Check receiver
+            String receiverSql =
+                "SELECT acc_num FROM account WHERE acc_num=?";
+
+            try (PreparedStatement receiver =
+                    con.prepareStatement(receiverSql)) {
+
+                receiver.setInt(1, to_acc);
+
+                try (ResultSet rs = receiver.executeQuery()) {
+
+                    if (!rs.next()) {
+                        con.rollback();
+                        return "Receiver Not Found";
+                    }
+                }
+            }
+
+            // Deduct sender balance
+            String deductSql =
+                "UPDATE account SET balance=balance-? WHERE acc_num=?";
+
+            try (PreparedStatement deduct =
+                    con.prepareStatement(deductSql)) {
+
+                deduct.setInt(1, amount);
+                deduct.setInt(2, from_acc);
+                deduct.executeUpdate();
+            }
+
+            // Add receiver balance
+            String addSql =
+                "UPDATE account SET balance=balance+? WHERE acc_num=?";
+
+            try (PreparedStatement add =
+                    con.prepareStatement(addSql)) {
+
+                add.setInt(1, amount);
+                add.setInt(2, to_acc);
+                add.executeUpdate();
+            }
+
+            // Record transaction
+            String logSql =
+                "INSERT INTO transactions(from_acc,to_acc,amount) VALUES(?,?,?)";
+
+            try (PreparedStatement log =
+                    con.prepareStatement(logSql)) {
+
+                log.setInt(1, from_acc);
+                log.setInt(2, to_acc);
+                log.setInt(3, amount);
+                log.executeUpdate();
+            }
+
+            con.commit();
 
             return "Transfer Successful";
 
         } catch (Exception e) {
+
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (Exception rollbackError) {
+                // Rollback failed
+            }
+
             return "ERROR: " + e.getMessage();
+
+        } finally {
+
+            try {
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (Exception e) {
+                // Connection cleanup
+            }
         }
     }
 
-    // ================= TRANSACTIONS =================
+    // ================= TRANSACTION HISTORY =================
     @GetMapping("/transactions")
-    public String transactions(@RequestParam int acc_num) {
+    public String transactions(
+            @RequestParam int acc_num) {
+
+        String sql =
+            "SELECT * FROM transactions " +
+            "WHERE from_acc=? OR to_acc=? ORDER BY id DESC";
 
         try (Connection con = getConnection();
-             PreparedStatement pst = con.prepareStatement(
-                     "SELECT * FROM transactions WHERE from_acc=? OR to_acc=?")) {
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setInt(1, acc_num);
             pst.setInt(2, acc_num);
 
-            ResultSet rs = pst.executeQuery();
+            try (ResultSet rs = pst.executeQuery()) {
 
-            StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
 
-            while (rs.next()) {
-                sb.append(rs.getInt("id")).append(",")
-                        .append(rs.getInt("from_acc")).append(",")
-                        .append(rs.getInt("to_acc")).append(",")
-                        .append(rs.getInt("amount")).append(",")
-                        .append(rs.getTimestamp("txn_date"))
-                        .append(";");
+                while (rs.next()) {
+
+                    sb.append(rs.getInt("id")).append(",")
+                      .append(rs.getInt("from_acc")).append(",")
+                      .append(rs.getInt("to_acc")).append(",")
+                      .append(rs.getInt("amount")).append(",")
+                      .append(rs.getTimestamp("txn_date"))
+                      .append(";");
+                }
+
+                return sb.length() > 0
+                        ? sb.toString()
+                        : "No Transactions";
             }
-
-            return sb.length() > 0 ? sb.toString() : "No Transactions";
 
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
