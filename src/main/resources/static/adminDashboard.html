@@ -221,7 +221,7 @@ function addCustomer() {
         return;
     }
 
-    fetch(`http://localhost:8080/addCustomer?name=${name}&acc_num=${acc_num}&pin=${pin}&balance=${balance}`,
+    fetch(`https://code-bank-management.onrender.com/addCustomer?name=${name}&acc_num=${acc_num}&pin=${pin}&balance=${balance}`,
         { method: "POST" })
     .then(res => res.text())
     .then(data => {
@@ -254,7 +254,7 @@ function updateCustomer() {
         return;
     }
 
-    fetch(`http://localhost:8080/updateCustomer?acc_num=${acc_num}&name=${name}`,
+    fetch(`/updateCustomer?acc_num=${acc_num}&name=${name}`,
         { method: "PUT" })
     .then(res => res.text())
     .then(data => {
@@ -286,7 +286,7 @@ function deleteCustomer() {
 
     if (!confirm("Are you sure you want to delete this customer?")) return;
 
-    fetch(`http://localhost:8080/deleteCustomer?acc_num=${acc_num}`,
+    fetch(`/deleteCustomer?acc_num=${acc_num}`,
         { method: "DELETE" })
     .then(res => res.text())
     .then(data => {
